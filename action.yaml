@@ -1,0 +1,78 @@
+name: 'Unblock Terraform Deployments'
+description: 'Setup Terraform and unlock stuck lock'
+inputs:
+  terraform_lock_id:
+    required: true
+    description: 'Terraform lock id'
+  terraform_directory:
+    description: 'Directory that holds Terraform code'
+    required: true
+  gcloud_sa_json_key_file:
+    required: false
+    description: 'JSON key for GCP service account that this runner will use. If specified, Workload Identity Federation will NOT be used. Using a SA json key file is not recommended, and it is only supported here for legacy reasons'
+    default: ''
+  github_token:
+    required: true
+    description: 'Github token used to modify the PR'
+  ssh_private_key:
+    required: false
+    description: 'SSH private key for the private terraform modules'
+    default: ""
+  workload_identity_provider:
+    required: false
+    description: 'The full identifier of the Workload Identity Provider, including the project number, pool name, and provider name'
+    default: 'projects/599682587101/locations/global/workloadIdentityPools/github-actions-workflows/providers/github-actions-workflows'
+  service_account:
+    required: false
+    description: 'Email address or unique identifier of the Google Cloud service account for which to generate credentials as part of the Workload Identity Federation setup'
+    default: 'github-actions-workflows@optimizely-iac-bootstrap.iam.gserviceaccount.com'
+
+runs:
+  using: "composite"
+  steps:
+    - id: auth_sa_key_json
+      if: inputs.gcloud_sa_json_key_file != ''
+      name: 'Authenticate to Google Cloud using a GCloud SA json key file'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: ${{inputs.gcloud_sa_json_key_file}}
+    - id: auth_wif
+      if: inputs.gcloud_sa_json_key_file == ''
+      name: 'Authenticate to Google Cloud using Workload Identity Federation'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: ${{inputs.workload_identity_provider}}
+        service_account: ${{inputs.service_account}}
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
+    - name: Terraform Init With SSH Private Key
+      if: inputs.ssh_private_key != ''
+      working-directory: ${{ inputs.terraform_directory }}
+      shell: bash
+      run: |
+        echo " ===> SSH Key provided. Will configure openssh client to be able to download Optimizely private terraform modules"
+        eval `ssh-agent -s`
+        ssh-add - <<< '${{ inputs.ssh_private_key }}'
+        terraform init
+      env:
+        TF_IN_AUTOMATION: "True"
+        GH_TOKEN: ${{ inputs.github_token }} ### Only needed to download private modules
+    - name: Terraform Init Without SSH Private Key
+      if: inputs.ssh_private_key == ''
+      working-directory: ${{ inputs.terraform_directory }}
+      shell: bash
+      run: |
+        echo " ===> SSH Key NOT provided. Openssh client will not be configured so no private terraform modules will be downloaded"
+        terraform init
+      env:
+        TF_IN_AUTOMATION: "True"
+        GH_TOKEN: ${{ inputs.github_token }} # Only needed to download private modules
+    - name: Terraform unlock
+      working-directory: ${{ inputs.terraform_directory }}
+      shell: bash
+      run: |
+        terraform force-unlock -force ${{ inputs.terraform_lock_id }}
+      env:
+        TF_IN_AUTOMATION: "True"
