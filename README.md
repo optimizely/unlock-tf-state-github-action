@@ -20,7 +20,7 @@ In more details, this action will:
 ```
     steps:
       - name: Terraform Unlock TF State
-        uses: tahsib-optimizely/unlock-tf-state-github-action@main
+        uses: optimizely/unlock-tf-state-github-action@main
         with:
           terraform_lock_id: ${{ inputs.lock_id }}
           terraform_directory: "infra/dev"
@@ -45,7 +45,7 @@ If *gcloud_sa_json_key_file* is not specified, this is the authentication method
 ```
     steps:
       - name: Terraform Unlock TF State
-        uses: tahsib-optimizely/unlock-tf-state-github-action@main
+        uses: optimizely/unlock-tf-state-github-action@main
         with:
           terraform_lock_id: ${{ inputs.lock_id }}
           terraform_directory: "infra/dev"
@@ -58,7 +58,7 @@ In the previous example, there was no need to configure anything related to Work
 ```
     steps:
       - name: Terraform Unlock TF State
-        uses: tahsib-optimizely/unlock-tf-state-github-action@main
+        uses: optimizely/unlock-tf-state-github-action@main
         with:
           terraform_lock_id: ${{ inputs.lock_id }}
           terraform_directory: "infra/dev"
@@ -77,7 +77,7 @@ If *gcloud_sa_json_key_file* variable is defined, this is the authentication met
 ```
     steps:
       - name: Terraform Unlock TF State
-        uses: tahsib-optimizely/unlock-tf-state-github-action@main
+        uses: optimizely/unlock-tf-state-github-action@main
         with:
           terraform_lock_id: ${{ inputs.lock_id }}
           terraform_directory: "infra/dev"
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/tf_unblock/
+      - uses: optimizely/unlock-tf-state-github-action@main
         with:
           terraform_lock_id: ${{ github.event.inputs.lock_id }}
           terraform_directory: "infra/${{ github.event.inputs.env }}"
