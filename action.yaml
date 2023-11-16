@@ -47,28 +47,6 @@ runs:
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_wrapper: false
-    - name: Terraform Init With SSH Private Key
-      if: inputs.ssh_private_key != ''
-      working-directory: ${{ inputs.terraform_directory }}
-      shell: bash
-      run: |
-        echo " ===> SSH Key provided. Will configure openssh client to be able to download Optimizely private terraform modules"
-        eval `ssh-agent -s`
-        ssh-add - <<< '${{ inputs.ssh_private_key }}'
-        terraform init
-      env:
-        TF_IN_AUTOMATION: "True"
-        GH_TOKEN: ${{ inputs.github_token }} ### Only needed to download private modules
-    - name: Terraform Init Without SSH Private Key
-      if: inputs.ssh_private_key == ''
-      working-directory: ${{ inputs.terraform_directory }}
-      shell: bash
-      run: |
-        echo " ===> SSH Key NOT provided. Openssh client will not be configured so no private terraform modules will be downloaded"
-        terraform init
-      env:
-        TF_IN_AUTOMATION: "True"
-        GH_TOKEN: ${{ inputs.github_token }} # Only needed to download private modules
     - name: Terraform unlock
       working-directory: ${{ inputs.terraform_directory }}
       shell: bash
