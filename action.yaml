@@ -33,18 +33,18 @@ runs:
     - id: auth_sa_key_json
       if: inputs.gcloud_sa_json_key_file != ''
       name: 'Authenticate to Google Cloud using a GCloud SA json key file'
-      uses: 'google-github-actions/auth@v1'
+      uses: 'google-github-actions/auth@v2'
       with:
         credentials_json: ${{inputs.gcloud_sa_json_key_file}}
     - id: auth_wif
       if: inputs.gcloud_sa_json_key_file == ''
       name: 'Authenticate to Google Cloud using Workload Identity Federation'
-      uses: 'google-github-actions/auth@v1'
+      uses: 'google-github-actions/auth@v2'
       with:
         workload_identity_provider: ${{inputs.workload_identity_provider}}
         service_account: ${{inputs.service_account}}
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
+      uses: hashicorp/setup-terraform@v3
       with:
         terraform_wrapper: false
     - name: Terraform unlock
