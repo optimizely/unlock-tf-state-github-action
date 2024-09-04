@@ -18,15 +18,38 @@ In more details, this action will:
 ### Basic example of this action in a workflow
 
 ```
+# https://github.com/optimizely/experimentation-golden-path/blob/main/golden_path/pipelines_and_gitflow/extra-1-unlock-state-file.md
+name: "Unblock Terraform Deployments"
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        required: true
+        type: choice
+        description: Environment
+        options:
+          - inte
+          - prep
+          - prod
+      lock_id:
+        required: true
+        type: string
+        description: Lock Id
+jobs:
+  unblock:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
+      - uses: actions/checkout@v4
       - name: Terraform Unlock TF State
         uses: optimizely/unlock-tf-state-github-action@main
         with:
           terraform_lock_id: ${{ inputs.lock_id }}
-          terraform_directory: "infra/dev"
-          gcloud_sa_json_key_file: ${{secrets.TEST_GITHUB_ACTIONS_SA_KEY}}
+          terraform_directory: "infra/${{ github.event.inputs.env }}"
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          ssh_private_key: ${{ secrets.TERRAFORM_PLAN_SSH_KEY }}
+          ssh_private_key: ${{ secrets.OPTI_EXP_MINION_TERRAFORM_PLAN_SSH_KEY }} ### This is a secret defined at the org level in the Optimizely org
 ```
 
 ## Authentication with Cloud providers
